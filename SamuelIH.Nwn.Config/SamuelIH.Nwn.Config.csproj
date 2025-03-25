@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFramework>net6.0</TargetFramework>
-        <LangVersion>9.0</LangVersion>
+        <TargetFramework>net8.0</TargetFramework>
+        <LangVersion>latest</LangVersion>
         <RuntimeIdentifier>linux-x64</RuntimeIdentifier>
 
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
@@ -15,6 +15,20 @@
         <Nullable>enable</Nullable>
 
         <RootNamespace>SamuelIH.Nwn.Config</RootNamespace>
+
+        <Description>Configuration utility for Anvil plugins</Description>
+
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+
+        <PackageProjectUrl>https://github.com/Samuel-IH/SamuelIH.Nwn.Config</PackageProjectUrl>
+
+        <PackageLicenseUrl>https://raw.githubusercontent.com/Samuel-IH/SamuelIH.Nwn.Config/refs/heads/main/README.md</PackageLicenseUrl>
+
+        <RepositoryUrl>https://github.com/Samuel-IH/SamuelIH.Nwn.Config</RepositoryUrl>
+
+        <RepositoryType>git</RepositoryType>
+
+        <PackageReleaseNotes>Configuration utility for Anvil plugins</PackageReleaseNotes>
     </PropertyGroup>
 
     <!--Uncomment and fill to build a NuGet package for your plugin.-->
@@ -62,7 +76,11 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="NWN.Anvil" Version="8193.33.10" ExcludeAssets="runtime" PrivateAssets="all"/>
+        <PackageReference Include="Castle.Core" Version="5.2.1" />
+        <PackageReference Include="NWN.Anvil" Version="8193.37.0" ExcludeAssets="runtime" PrivateAssets="all">
+          <IncludeAssets>compile; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="YamlDotNet" Version="15.1.4" />
     </ItemGroup>
 
 </Project>

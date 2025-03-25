@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
 using Anvil.Services;
+using Castle.DynamicProxy;
 using NLog;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
@@ -23,6 +25,10 @@ namespace SamuelIH.Nwn.Config;
             .WithNamingConvention(CamelCaseNamingConvention.Instance)
             .Build();
 
+        private readonly Dictionary<object, string?> configs = new();
+        
+        private readonly ProxyGenerator proxyGenerator = new();
+
         public ConfigManager()
         {
             if (!Directory.Exists(ConfigDir))
@@ -32,7 +38,7 @@ namespace SamuelIH.Nwn.Config;
             }
         }
 
-        public T BuildConfig<T>(string name) where T : Configuration, new()
+        public T BuildConfig<T>(string name) where T: class, new()
         {
             T config;
 
@@ -48,24 +54,30 @@ namespace SamuelIH.Nwn.Config;
             {
                 var rawYaml = File.ReadAllText(path);
                 config = deserializer.Deserialize<T>(rawYaml);
-                config.Name = name;
             }
             else
             {
                 config = new T();
-                config.Name = name;
-                Log.Info($"Config {config.Name} not found. Creating new one at {path}...");
+                Log.Info($"Config {name} not found. Creating new one at {path}...");
                 SaveConfig(config);
             }
+            
+            configs.Add(config!, name);
+            
+            var proxiedConfig = proxyGenerator.CreateClassProxyWithTarget(config, new ConfigInterceptor(this, config));
 
-            config.Manager = this;
-
-            return config;
+            return proxiedConfig;
         }
 
-        internal void SaveConfig(Configuration config)
+        internal void SaveConfig<T>(T config)
         {
-            var path = Path.Combine(ConfigDir, config.Name + ".yaml");
+            if (config is null) return;
+            if (!configs.TryGetValue(config, out var name))
+            {
+                Log.Error($"Config {config} is not registered!");
+            }
+            
+            var path = Path.Combine(ConfigDir, name + ".yaml");
             var yaml = serializer.Serialize(config);
             File.WriteAllText(path, yaml);
         }

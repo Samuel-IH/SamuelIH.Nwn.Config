@@ -1,6 +1,9 @@
+using System;
+using System.Collections.Generic;
+
 namespace SamuelIH.Nwn.Config;
 
-public class Configuration
+public abstract class Configuration
 {
-    
+    public abstract string GetName();
 }

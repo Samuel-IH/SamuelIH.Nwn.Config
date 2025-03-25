@@ -19,6 +19,8 @@ internal class ConfigInterceptor : IInterceptor
     
     public void Intercept(IInvocation invocation)
     {
+        Log.Info($"invocation: {invocation.Method.Name}");
+        
         // Check if the method is a property setter
         if (invocation.Method.IsSpecialName && invocation.Method.Name.StartsWith("set_"))
         {

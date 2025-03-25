@@ -54,15 +54,15 @@ namespace SamuelIH.Nwn.Config;
             {
                 var rawYaml = File.ReadAllText(path);
                 config = deserializer.Deserialize<T>(rawYaml);
+                configs.Add(config!, name);
             }
             else
             {
                 config = new T();
                 Log.Info($"Config {name} not found. Creating new one at {path}...");
+                configs.Add(config!, name);
                 SaveConfig(config);
             }
-            
-            configs.Add(config!, name);
             
             var proxiedConfig = proxyGenerator.CreateClassProxyWithTarget(config, new ConfigInterceptor(this, config));
 

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
+using Anvil.API;
 using Anvil.Services;
 using Castle.DynamicProxy;
 using NLog;
@@ -28,6 +29,7 @@ namespace SamuelIH.Nwn.Config;
         private readonly Dictionary<object, string?> configs = new();
         
         private readonly ProxyGenerator proxyGenerator = new();
+        private readonly ConfigScriptAccessor configScriptAccessor = new();
 
         public ConfigManager()
         {
@@ -65,6 +67,8 @@ namespace SamuelIH.Nwn.Config;
             }
             
             var proxiedConfig = proxyGenerator.CreateClassProxyWithTarget(config, new ConfigInterceptor(this, config));
+            
+            configScriptAccessor.RegisterConfig(proxiedConfig, name);
 
             return proxiedConfig;
         }
@@ -80,5 +84,55 @@ namespace SamuelIH.Nwn.Config;
             var path = Path.Combine(ConfigDir, name + ".yaml");
             var yaml = serializer.Serialize(config);
             File.WriteAllText(path, yaml);
+        }
+
+        [ScriptHandler("config_getset")]
+        public void NwScriptGetSet()
+        {
+            var taskVar = NwModule.Instance.GetObjectVariable<LocalVariableInt>("config_getset_task");
+            var typeVar = NwModule.Instance.GetObjectVariable<LocalVariableInt>("config_getset_type");
+            var configNameVar = NwModule.Instance.GetObjectVariable<LocalVariableString>("config_getset_config");
+            var propNameVar = NwModule.Instance.GetObjectVariable<LocalVariableString>("config_getset_prop");
+            
+            var returnIntVar = NwModule.Instance.GetObjectVariable<LocalVariableInt>("config_getset_return_int");
+            var returnFloatVar = NwModule.Instance.GetObjectVariable<LocalVariableFloat>("config_getset_return_float");
+            var returnStringVar = NwModule.Instance.GetObjectVariable<LocalVariableString>("config_getset_return_string");
+
+            if (taskVar.Value == 0) // get
+            {
+                switch (typeVar.Value)
+                {
+                    case 0: // int
+                        returnIntVar.Value = configScriptAccessor.GetInt(configNameVar.Value ?? "", propNameVar.Value ?? "");
+                        break;
+                    case 1: // float
+                        returnFloatVar.Value = configScriptAccessor.GetFloat(configNameVar.Value ?? "", propNameVar.Value ?? "");
+                        break;
+                    case 2: // string
+                        returnStringVar.Value = configScriptAccessor.GetString(configNameVar.Value ?? "", propNameVar.Value ?? "");
+                        break;
+                }
+            }
+            else // set
+            {
+                switch (returnIntVar.Value)
+                {
+                    case 0: // int
+                        configScriptAccessor.SetInt(configNameVar.Value ?? "", propNameVar.Value ?? "", returnIntVar.Value);
+                        break;
+                    case 1: // float
+                        configScriptAccessor.SetFloat(configNameVar.Value ?? "", propNameVar.Value ?? "", returnFloatVar.Value);
+                        break;
+                    case 2: // string
+                        configScriptAccessor.SetString(configNameVar.Value ?? "", propNameVar.Value ?? "", returnStringVar.Value ?? "");
+                        break;
+                }
+            }
+            
+            // Wipe all vars but return vars
+            taskVar.Delete();
+            typeVar.Delete();
+            configNameVar.Delete();
+            propNameVar.Delete();
         }
     }

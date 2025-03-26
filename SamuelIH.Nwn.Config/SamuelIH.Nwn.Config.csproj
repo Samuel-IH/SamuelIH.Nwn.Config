@@ -30,7 +30,7 @@
 
         <PackageReleaseNotes>Configuration utility for Anvil plugins</PackageReleaseNotes>
 
-        <Version>1.0.1</Version>
+        <Version>37.0.0</Version>
     </PropertyGroup>
 
     <!--Uncomment and fill to build a NuGet package for your plugin.-->

@@ -54,6 +54,15 @@ internal class ConfigScriptAccessor
                     
                     scriptingIntsByNameByConfig[configName].Add(propName, accessor);
                 }
+                else if (prop.PropertyType == typeof(bool))
+                {
+                    var accessor = new ScriptingAccessibleConfigVar<int>(
+                        getValue: () => (bool)prop.GetValue(config)! ? 1 : 0,
+                        setValue: value => prop.SetValue(config, value == 1)
+                    );
+                    
+                    scriptingIntsByNameByConfig[configName].Add(propName, accessor);
+                }
                 else if (prop.PropertyType == typeof(float))
                 {
                     var accessor = new ScriptingAccessibleConfigVar<float>(
